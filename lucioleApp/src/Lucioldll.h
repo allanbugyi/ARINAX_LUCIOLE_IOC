@@ -14,6 +14,12 @@
 #ifndef __LUCIOLDLL_H__
 #define __LUCIOLDLL_H__
 
+typedef char BYTE;
+typedef short WORD;
+typedef int DWORD;
+typedef bool BOOL;
+typedef long h_TinyDiaFrame;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

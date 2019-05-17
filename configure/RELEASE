@@ -21,7 +21,7 @@
 
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
-SUPPORT=/usr/local/epics/synApps_6_0/support
+SUPPORT=/usr/local/epics/synApps/support
 
 ASYN=$(SUPPORT)/asyn-R4-33
 

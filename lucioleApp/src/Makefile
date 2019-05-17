@@ -23,6 +23,7 @@ luciole_SYS_LIBS    += tinyDiaFrame
 
 luciole_LIBS	    += asyn
 
+luciole_SRCS += lucioledrv.cpp
 luciole_SRCS += luciole_registerRecordDeviceDriver.cpp
 
 # Build the main IOC entry point where needed
@@ -32,7 +33,7 @@ luciole_SRCS_vxWorks += -nil-
 # Add support from base/src/vxWorks if needed
 #luciole_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
-lucioleSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
+luciole_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------

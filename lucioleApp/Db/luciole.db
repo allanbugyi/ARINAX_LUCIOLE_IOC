@@ -1,42 +1,38 @@
 record(longout, "$(B):$(E):LIGHT_CH$(Ch)"){
     field(DESC, "Light value channel $(Ch)")
     field(DTYP, "asynInt32")
-    field(OUT,  "asyn@$(PORT)$(ADDR)LIGHT_$(Ch)_LONGOUT_VAL")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LIGHT_CH$(Ch)_LONGOUT_VAL")
 }
 
 record(stringin, "$(B):$(E):LIGHT_STATE_CH$(Ch)"){
     field(DESC, "Light value channel $(Ch)")
-    field(DTYP, "asynOctet")
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LIGHTSTATE_CH$(Ch)_STRINGIN_VAL")
     field(SCAN, "I/O Intr")
-    field(INP,  "asyn@$(PORT)$(ADDR)LIGHT_CH$(Ch)_STRINGIN_VAL")
 }
 
-record(bo, "$(B):$(E):TRIGGER_MODE"){
-    field(DESC, "Trigger mode")
-    field(DTYP, "asynInt32")
-    field(VAL, "0")
-    field(ZST, "0")
-    field(OST, "1")
-    field(ZNAM, "Not triggered")
-    field(ONAM, "Triggered")
-    field(PINI, "YES")
-    field(OUT, "asyn@$(PORT)$(ADDR)TRIGGERMODE_BINARYOUT_VAL")
-}
+#record(bo, "$(B):$(E):TRIGGER_MODE"){
+#    field(DESC, "Trigger mode")
+#    field(DTYP, "asynInt32")
+#    field(VAL, "0")
+#    field(ZNAM, "Not triggered")
+#    field(ONAM, "Triggered")
+#    field(PINI, "YES")
+#    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TRIGGERMODE_BINARYOUT_VAL")
+#}
 
-record(bi, "$(B):$(E):CONNECTION_STATE"){
-    field(DESC, "Connection state")
-    field(DTYP, "asynInt32")
-    field(SCAN, "I/O Intr")
-    field(INP, "asyn@$(PORT)$(ADDR)CONNECTIONSTATE_BINARYIN_VAL")
-}
+#record(bi, "$(B):$(E):CONNECTION_STATE"){
+#    field(DESC, "Connection state")
+#    field(DTYP, "asynInt32")
+#    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))CONNECTIONSTATE_BINARYIN_VAL")
+#    field(SCAN, "I/O Intr")
+#}
 
-record(bo, "$(B):$(E):CHANNEL_INDX"){
-    field(DESC, "Channel index")
-    field(DTYP, "asynInt32")
-    field(ZST, "0")
-    field(OST, "0")
-    field(ZNAM, "0")
-    field(ONAM, "0")
-    field(PINI, "YES")
-    field(OUT, "asyn@$(PORT)$(ADDR)CHANNELINDX_BINARYOUT_VAL")
-}
+#record(bo, "$(B):$(E):CHANNEL_INDX"){
+#    field(DESC, "Channel index")
+#    field(DTYP, "asynInt32")
+#    field(ZNAM, "1")
+#    field(ONAM, "2")
+#    field(PINI, "YES")
+#    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))CHANNELINDX_BINARYOUT_VAL")
+#}

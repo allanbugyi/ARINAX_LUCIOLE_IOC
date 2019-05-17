@@ -9,16 +9,24 @@
 #define connectionState_binaryInValueString     "CONNECTIONSTATE_BINARYIN_VAL"
 #define channelIndx_binaryOutValueString        "CHANNELINDX_BINARYOUT_VAL"
 
-class Lucioledrv: public asynPortDriver(){
+#define NUM_LONG_OUT		4
+#define NUM_BINARY_OUT		1
+#define NUM_BINARY_IN		2
+
+#define NUM_PARAMS		7
+#define MAX_SIGNALS		1
+
+
+class Lucioledrv: public asynPortDriver{
     public:
-        Lucioledr(const char *portName, const char *ip);
+        Lucioledrv(const char *portName, char *ip);
 
         //AsynPortDriver methods extended
         virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-        virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t maxChars, size_t *nActual);
+        //virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t maxChars, size_t *nActual);
 
         //Luciole's library related
-        void luciole_open(const char *strPortDesc);
+        void luciole_open(char *strPortDesc);
         void luciole_close();
         void luciole_IsConnected();
         int luciole_getLightValue(BYTE Chx);
