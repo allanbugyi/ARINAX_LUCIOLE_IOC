@@ -1,0 +1,25 @@
+record(longout, "$(B):$(E):LIGHT_CH$(Ch)"){
+    field(DESC, "Light value channel $(Ch)")
+    field(DTYP, "asynInt32")
+    field(HOPR, "20000")
+    field(LOPR, "0")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LIGHT_CH$(Ch)_LONGOUT_VAL")
+}
+
+record(bi, "$(B):$(E):TRIGGER_MODE_CH$(Ch)"){
+    field(DESC, "Trigger mode channel $(Ch)")
+    field(DTYP, "asynInt32")
+    field(VAL, "0")
+    field(ZNAM, "Not triggered")
+    field(ONAM, "Triggered")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TRIGGERMODE_CH$(Ch)_BINARYIN_VAL")
+    field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(B):$(E):SETTRIGGER_CH$(Ch)"){
+    field(DESC, "Set trigger for channel $(Ch)")
+    field(DTYP, "asynInt32")
+    field(ZNAM, "Not triggered")
+    field(ONAM, "Triggered")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))SETTRIGGER_CH$(Ch)_BINARYOUT_VAL")
+}

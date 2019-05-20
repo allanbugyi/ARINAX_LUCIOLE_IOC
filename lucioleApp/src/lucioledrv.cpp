@@ -53,11 +53,13 @@ Lucioledrv::Lucioledrv(const char *portName, char *ip)
 {
     createParam(light_ch1_longOutValueString, asynParamInt32, &light_ch1_longOutValue);
     createParam(light_ch2_longOutValueString, asynParamInt32, &light_ch2_longOutValue);
-    createParam(lightState_ch1_longOutValueString, asynParamOctet, &lightState_ch1_longOutValue);
-    createParam(lightState_ch2_longOutValueString, asynParamOctet, &lightState_ch2_longOutValue);
-    createParam(triggerMode_binaryOutValueString, asynParamInt32, &triggerMode_binaryOutValue);
+    createParam(deviceState_stringInValueString, asynParamInt32, &deviceState_stringInValue);
+    createParam(triggerMode_ch1_binaryInValueString, asynParamInt32, &triggerMode_ch1_binaryInValue);
+    createParam(triggerMode_ch2_binaryInValueString, asynParamInt32, &triggerMode_ch2_binaryInValue);
+    createParam(setTrigger_ch1_binaryInValueString, asynParamInt32, &setTrigger_ch1_binaryInValue);
+    createParam(setTrigger_ch2_binaryInValueString, asynParamInt32, &setTrigger_ch2_binaryInValue);
     createParam(connectionState_binaryInValueString, asynParamInt32, &connectionState_binaryInValue);
-    createParam(channelIndx_binaryOutValueString, asynParamInt32, &channelIndx_binaryOutValue);
+    createParam(error_mbbiValueString, asynParamInt32, &error_mbbiValue);
     
     luciole_open(ip);
 }
@@ -68,54 +70,155 @@ void Lucioledrv::luciole_open(char *strPortDesc){
     strcat(aux, strPortDesc);
     strcat(aux, ":4528");
     
-    int error = cls_OpenCom(aux);
+    int returnedValue = cls_OpenCom(aux);
     char aux2[30];
     strcpy(aux2, strPortDesc);
-    if(error>0)luciole_setEthernetInterface(aux2);
+    if(returnedValue>0){
+        hdiaframe = returnedValue;
+        luciole_setEthernetInterface(aux2);
+    }else{ //error
+        setIntegerParam(error_mbbiValue, returnedValue);
+        callParamCallbacks();
+    }
 }
 
 void Lucioledrv::luciole_close(){
-    return;
+    cls_CloseCom(hdiaframe);
+    cls_Close();
+    setIntegerParam(connectionState_binaryInValue, 0);
+    callParamCallbacks();
 }
 
 void Lucioledrv::luciole_IsConnected(){
-    return;
+    bool isConnected = cls_IsConnected();
+    if(isConnected) setIntegerParam(connectionState_binaryInValue, 1);
+    else            setIntegerParam(connectionState_binaryInValue, 0);
+    callParamCallbacks();    
 }
 
-int Lucioledrv::luciole_getLightValue(BYTE Chx){
-    int lightValue = cls_GetLightValue(Chx);
-    if(lightValue>0){
-        setIntegerParam(light_ch1_longOutValue, lightValue);
+void Lucioledrv::luciole_getLightValue(BYTE Chx){
+    int returnedValue = cls_GetLightValue(Chx);
+    if(returnedValue>0){
+        setIntegerParam(light_ch1_longOutValue, returnedValue);
+        callParamCallbacks();
+    }else{ //error
+        setIntegerParam(error_mbbiValue, returnedValue);
+        callParamCallbacks();        
+    }
+}
+
+void Lucioledrv::luciole_getState(){
+    char **pstrError;
+    cls_GetState(pstrError);
+    const char *returnedMessage = (const char *) *pstrError;
+    //setIntegerParam(deviceState_stringInValue, returnedMessage);
+    callParamCallbacks();
+}
+
+void Lucioledrv::luciole_setTrigger(BYTE Chx, int flag){
+    int returnedValue = cls_SetTrigger(Chx, flag);
+    if(returnedValue<0){ //error
+        setIntegerParam(error_mbbiValue, returnedValue);
         callParamCallbacks();
     }
-    //cls. lightValue
-    return 0;
-}
-
-void Lucioledrv::luciole_getState(char **pstrError){
-    return;
 }
 
 int Lucioledrv::luciole_getTrigger(BYTE Chx){
-    return 0;    
+    int mode = cls_GetTrigger(Chx);
+    return mode;
 }
 
-int Lucioledrv::luciole_setEthernetInterface(char *strIpAddr){
-    int error = cls_SetEthernetInterface(strIpAddr);
-    return 0;    
+void Lucioledrv::luciole_setEthernetInterface(char *strIpAddr){
+    int returnedValue = cls_SetEthernetInterface(strIpAddr);
+    if(returnedValue<0){ //error
+        setIntegerParam(error_mbbiValue, returnedValue);
+        callParamCallbacks();
+        return;
+    }
+    luciole_IsConnected();
 }
 
-int Lucioledrv::luciole_setLightValue(BYTE Chx, WORD LightVal){
-    int error = cls_SetLightValue(Chx, LightVal);
-    cout<<error;
-    return 0;
-}
-
-int Lucioledrv::luciole_setTrigger(BYTE Chx, int flag){
-    return 0;
+void Lucioledrv::luciole_setLightValue(BYTE Chx, WORD LightVal){
+    int returnedValue = cls_SetLightValue(Chx, LightVal);
+    if(returnedValue<0){ //error
+        setIntegerParam(error_mbbiValue, returnedValue);
+        callParamCallbacks();
+    }
 }
 
 //------------ asynPortDriver extended methods ------------
+asynStatus Lucioledrv::readOctet(asynUser *pasynUser,
+                            char *value, size_t maxChars, size_t *nActual,
+                            int *eomReason)
+{
+    int function = pasynUser->reason;
+        const char *paramName;
+        getParamName(function, &paramName);
+    int addr=0;
+    asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
+    static const char *functionName = "readOctet";
+   
+    if(function==deviceState_stringInValue){
+        cout << "OI";
+        luciole_getState();
+    }
+    
+    status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
+    /* We just read the current value of the parameter from the parameter library.
+     * Those values are updated whenever anything could cause them to change */
+    status = (asynStatus)getStringParam(addr, function, (int)maxChars, value);
+    /* Set the timestamp */
+    pasynUser->timestamp = timeStamp;
+    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
+    if (status) 
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                  "%s:%s: status=%d, function=%d, name=%s, value=%s", 
+                  driverName, functionName, status, function, paramName, value);
+    else        
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
+              "%s:%s: function=%d, name=%s, value=%s\n", 
+              driverName, functionName, function, paramName, value);
+    if (eomReason) *eomReason = ASYN_EOM_END;
+    *nActual = strlen(value)+1;
+    return(status);
+}
+
+asynStatus Lucioledrv::readInt32(asynUser *pasynUser, epicsInt32 *value)
+{
+    int function = pasynUser->reason;
+        const char *paramName;
+        getParamName(function, &paramName);
+    int addr=0;
+    asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
+    static const char *functionName = "readInt32";
+    
+    if(function==deviceState_stringInValue){
+        cout << "OI";
+        luciole_getState();
+    }
+    
+    status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
+    /* We just read the current value of the parameter from the parameter library.
+     * Those values are updated whenever anything could cause them to change */
+    status = (asynStatus) getIntegerParam(addr, function, value);
+    /* Set the timestamp */
+    pasynUser->timestamp = timeStamp;
+    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
+    if (status) 
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
+                  driverName, functionName, status, function, paramName, *value);
+    else        
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
+              "%s:%s: function=%d, name=%s, value=%d\n", 
+              driverName, functionName, function, paramName, *value);
+    return(status);
+}
+
 asynStatus Lucioledrv::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
@@ -128,12 +231,18 @@ asynStatus Lucioledrv::writeInt32(asynUser *pasynUser, epicsInt32 value)
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
 
     if(function==light_ch1_longOutValue){
-        char lightValue = (char) value;
+        short lightValue = (short) value;
         luciole_setLightValue(1, lightValue);
     }
     else if(function==light_ch2_longOutValue){
-        char lightValue = (char) value;
+        short lightValue = (short) value;
         luciole_setLightValue(2, lightValue);
+    }
+    else if(function==setTrigger_ch1_binaryInValue){
+        luciole_setTrigger(1, 1);
+    }
+    else if(function==setTrigger_ch2_binaryInValue){
+        luciole_setTrigger(2, 1);        
     }
     
     /* Set the parameter in the parameter library. */

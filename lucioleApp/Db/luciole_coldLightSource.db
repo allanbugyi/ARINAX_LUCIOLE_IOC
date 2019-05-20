@@ -1,0 +1,51 @@
+record(bi, "$(B):$(E):CONNECTION_STATE"){
+    field(DESC, "Connection state")
+    field(DTYP, "asynInt32")
+    field(VAL, "0")
+    field(ZNAM, "Not Connected")
+    field(ONAM, "Connected")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))CONNECTIONSTATE_BINARYIN_VAL")
+    field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(B):$(E):DEVICE_STATE"){
+    field(DESC, "Device state of operation")
+    field(DTYP, "asynInt32")
+    #field(SCAN, "I/O Intr")
+    field(SCAN, "10 seconds")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DEVICESTATE_STRINGIN_VAL")
+}
+
+record(mbbi, "$(B):$(E):ERROR"){
+    field(DESC, "Error State")
+    field(DTYP, "asynInt32")
+    field(VAL, "0")
+    field(ZRVL, "0")
+    field(ONVL, "-20")
+    field(TWVL, "-1000")
+    field(THVL, "-3000")
+    field(FRVL, "-2000")
+    field(FVVL, "-2001")
+    field(SXVL, "-2002")
+    field(SVVL, "-2003")
+    field(EIVL, "-4000")
+    field(ZRST, "SUCCESS - No error")
+    field(ONST, "ERROR_INVALID_CMD")
+    field(TWST, "ERROR_NO_RESP")
+    field(THST, "ERROR_COM_NOT_OPEN")
+    field(FRST, "ERROR_COM_PROBLEM")
+    field(FVST, "ERROR_TCP_NOT_SUPPORTED")
+    field(SXST, "ERROR_SER_NOT_SUPPORTED")
+    field(SVST, "ERROR_COM_NOT_SUPPORTED")
+    field(EIST, "ERROR_INVALID_PARAM")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))ERROR_MBBI_VAL")
+}
+
+#record(bo, "$(B):$(E):CHANNEL_INDX"){
+#    field(DESC, "Channel index")
+#    field(DTYP, "asynInt32")
+#    field(ZNAM, "1")
+#    field(ONAM, "2")
+#    field(PINI, "YES")
+#    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))CHANNELINDX_BINARYOUT_VAL")
+#}

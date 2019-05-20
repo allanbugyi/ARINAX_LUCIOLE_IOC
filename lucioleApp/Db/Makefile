@@ -4,7 +4,8 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS BELOW HERE
 
 # Install databases, templates & substitutions like this
-DB += luciole.db
+DB += luciole_coldLightSource.db
+DB += luciole_lightChannel.db
 
 # If <anyname>.db template is not named <anyname>*.template add
 # <anyname>_TEMPLATE = <templatename>
