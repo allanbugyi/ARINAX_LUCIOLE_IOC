@@ -18,18 +18,18 @@
 class Lucioledrv: public asynPortDriver{
     public:
         Lucioledrv(const char *portName, char *ip);
+        ~Lucioledrv();
 
         //AsynPortDriver methods extended
         virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-        virtual asynStatus readOctet(asynUser *pasynUser, char *value, size_t maxChars, size_t *nActual, int *eomReason);
-        virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
         
         //Luciole's library related
         void luciole_open(char *strPortDesc);
         void luciole_close();
+        void luciole_releaseNetworkMode(BYTE Chx);
         void luciole_IsConnected();
         void luciole_getLightValue(BYTE Chx);
-        void luciole_getState();
+        //void luciole_getState(); //currently unused
         void luciole_setTrigger(BYTE Chx, int Flag);
         int luciole_getTrigger(BYTE Chx);
         void luciole_setEthernetInterface(char *strIpAddr);

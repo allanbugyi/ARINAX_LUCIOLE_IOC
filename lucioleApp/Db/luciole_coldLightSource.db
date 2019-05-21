@@ -8,14 +8,6 @@ record(bi, "$(B):$(E):CONNECTION_STATE"){
     field(SCAN, "I/O Intr")
 }
 
-record(stringin, "$(B):$(E):DEVICE_STATE"){
-    field(DESC, "Device state of operation")
-    field(DTYP, "asynInt32")
-    #field(SCAN, "I/O Intr")
-    field(SCAN, "10 seconds")
-    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DEVICESTATE_STRINGIN_VAL")
-}
-
 record(mbbi, "$(B):$(E):ERROR"){
     field(DESC, "Error State")
     field(DTYP, "asynInt32")
@@ -39,13 +31,5 @@ record(mbbi, "$(B):$(E):ERROR"){
     field(SVST, "ERROR_COM_NOT_SUPPORTED")
     field(EIST, "ERROR_INVALID_PARAM")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))ERROR_MBBI_VAL")
+    field(SCAN, "I/O Intr")
 }
-
-#record(bo, "$(B):$(E):CHANNEL_INDX"){
-#    field(DESC, "Channel index")
-#    field(DTYP, "asynInt32")
-#    field(ZNAM, "1")
-#    field(ONAM, "2")
-#    field(PINI, "YES")
-#    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))CHANNELINDX_BINARYOUT_VAL")
-#}

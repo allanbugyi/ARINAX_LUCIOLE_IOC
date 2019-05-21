@@ -1,6 +1,6 @@
 /*____________________________________________________________________________________________________________________________________
 |	Driver support for Arinax Luciole Cold Light Source developed with AsynPortDriver module from asyn/SynApps                    |
-|	Brazilian Synchroton Light National Laboratory - Campinas, 04/  /2019                                                         |
+|	Brazilian Synchroton Light National Laboratory - Campinas, 05/21/2019                                                         |
 |	Author: Allan S. B. Bugyi	(allan.bugyi@lnls.br)									      |
 |	Version: 1.0														      |
 |	Tested                                                                                                                        |
@@ -8,7 +8,7 @@
 |       License:                                                                                                                      |
 |        This software is distributed under the following ISC license:                                                                |
 |                                                                                                                                     |
-|        Copyright © 2018 BRAZILIAN SYNCHROTRON LIGHT SOURCE <sol@lnls.br>                                                            |
+|        Copyright © 2019 BRAZILIAN SYNCHROTRON LIGHT SOURCE <sol@lnls.br>                                                            |
 |                                                                                                                                     |
 |        Permission to use, copy, modify, and/or distribute this software for any                                                     |
 |        purpose with or without fee is hereby granted, provided that the above                                                       |
@@ -53,7 +53,6 @@ Lucioledrv::Lucioledrv(const char *portName, char *ip)
 {
     createParam(light_ch1_longOutValueString, asynParamInt32, &light_ch1_longOutValue);
     createParam(light_ch2_longOutValueString, asynParamInt32, &light_ch2_longOutValue);
-    createParam(deviceState_stringInValueString, asynParamInt32, &deviceState_stringInValue);
     createParam(triggerMode_ch1_binaryInValueString, asynParamInt32, &triggerMode_ch1_binaryInValue);
     createParam(triggerMode_ch2_binaryInValueString, asynParamInt32, &triggerMode_ch2_binaryInValue);
     createParam(setTrigger_ch1_binaryInValueString, asynParamInt32, &setTrigger_ch1_binaryInValue);
@@ -62,6 +61,13 @@ Lucioledrv::Lucioledrv(const char *portName, char *ip)
     createParam(error_mbbiValueString, asynParamInt32, &error_mbbiValue);
     
     luciole_open(ip);
+}
+
+Lucioledrv::~Lucioledrv(){
+    //even thought implemented, the deconstrutor is not ever called because of the registered function methodology in EPICS
+    luciole_releaseNetworkMode(1);
+    luciole_releaseNetworkMode(2);
+    luciole_close();
 }
 
 void Lucioledrv::luciole_open(char *strPortDesc){
@@ -73,10 +79,11 @@ void Lucioledrv::luciole_open(char *strPortDesc){
     int returnedValue = cls_OpenCom(aux);
     char aux2[30];
     strcpy(aux2, strPortDesc);
-    if(returnedValue>0){
+    if(returnedValue>=0){
         hdiaframe = returnedValue;
         luciole_setEthernetInterface(aux2);
     }else{ //error
+        cout<<"ERROR: Not able to effectively communicate with the device. Please, try to rerun the IOC.\n";
         setIntegerParam(error_mbbiValue, returnedValue);
         callParamCallbacks();
     }
@@ -89,6 +96,14 @@ void Lucioledrv::luciole_close(){
     callParamCallbacks();
 }
 
+void Lucioledrv::luciole_releaseNetworkMode(BYTE Chx){
+    int returnedValue = cls_ReleaseNetworkMode(Chx);
+    if(returnedValue<0){
+        setIntegerParam(error_mbbiValue, returnedValue);
+        callParamCallbacks();        
+    }
+}
+
 void Lucioledrv::luciole_IsConnected(){
     bool isConnected = cls_IsConnected();
     if(isConnected) setIntegerParam(connectionState_binaryInValue, 1);
@@ -98,7 +113,7 @@ void Lucioledrv::luciole_IsConnected(){
 
 void Lucioledrv::luciole_getLightValue(BYTE Chx){
     int returnedValue = cls_GetLightValue(Chx);
-    if(returnedValue>0){
+    if(returnedValue>=0){
         setIntegerParam(light_ch1_longOutValue, returnedValue);
         callParamCallbacks();
     }else{ //error
@@ -107,13 +122,13 @@ void Lucioledrv::luciole_getLightValue(BYTE Chx){
     }
 }
 
+/* currently unused
 void Lucioledrv::luciole_getState(){
     char **pstrError;
     cls_GetState(pstrError);
-    const char *returnedMessage = (const char *) *pstrError;
-    //setIntegerParam(deviceState_stringInValue, returnedMessage);
-    callParamCallbacks();
+    
 }
+*/
 
 void Lucioledrv::luciole_setTrigger(BYTE Chx, int flag){
     int returnedValue = cls_SetTrigger(Chx, flag);
@@ -129,7 +144,8 @@ int Lucioledrv::luciole_getTrigger(BYTE Chx){
 }
 
 void Lucioledrv::luciole_setEthernetInterface(char *strIpAddr){
-    int returnedValue = cls_SetEthernetInterface(strIpAddr);
+    int returnedValue;
+    returnedValue = cls_SetEthernetInterface(strIpAddr);
     if(returnedValue<0){ //error
         setIntegerParam(error_mbbiValue, returnedValue);
         callParamCallbacks();
@@ -140,85 +156,13 @@ void Lucioledrv::luciole_setEthernetInterface(char *strIpAddr){
 
 void Lucioledrv::luciole_setLightValue(BYTE Chx, WORD LightVal){
     int returnedValue = cls_SetLightValue(Chx, LightVal);
-    if(returnedValue<0){ //error
+    if(returnedValue<0){ //error     
         setIntegerParam(error_mbbiValue, returnedValue);
         callParamCallbacks();
     }
 }
 
-//------------ asynPortDriver extended methods ------------
-asynStatus Lucioledrv::readOctet(asynUser *pasynUser,
-                            char *value, size_t maxChars, size_t *nActual,
-                            int *eomReason)
-{
-    int function = pasynUser->reason;
-        const char *paramName;
-        getParamName(function, &paramName);
-    int addr=0;
-    asynStatus status = asynSuccess;
-    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
-    static const char *functionName = "readOctet";
-   
-    if(function==deviceState_stringInValue){
-        cout << "OI";
-        luciole_getState();
-    }
-    
-    status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
-    /* We just read the current value of the parameter from the parameter library.
-     * Those values are updated whenever anything could cause them to change */
-    status = (asynStatus)getStringParam(addr, function, (int)maxChars, value);
-    /* Set the timestamp */
-    pasynUser->timestamp = timeStamp;
-    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
-    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, name=%s, value=%s", 
-                  driverName, functionName, status, function, paramName, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, name=%s, value=%s\n", 
-              driverName, functionName, function, paramName, value);
-    if (eomReason) *eomReason = ASYN_EOM_END;
-    *nActual = strlen(value)+1;
-    return(status);
-}
-
-asynStatus Lucioledrv::readInt32(asynUser *pasynUser, epicsInt32 *value)
-{
-    int function = pasynUser->reason;
-        const char *paramName;
-        getParamName(function, &paramName);
-    int addr=0;
-    asynStatus status = asynSuccess;
-    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
-    static const char *functionName = "readInt32";
-    
-    if(function==deviceState_stringInValue){
-        cout << "OI";
-        luciole_getState();
-    }
-    
-    status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
-    /* We just read the current value of the parameter from the parameter library.
-     * Those values are updated whenever anything could cause them to change */
-    status = (asynStatus) getIntegerParam(addr, function, value);
-    /* Set the timestamp */
-    pasynUser->timestamp = timeStamp;
-    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
-    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
-                  driverName, functionName, status, function, paramName, *value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, name=%s, value=%d\n", 
-              driverName, functionName, function, paramName, *value);
-    return(status);
-}
-
+//------------ asynPortDriver extended method ------------
 asynStatus Lucioledrv::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
@@ -232,7 +176,10 @@ asynStatus Lucioledrv::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     if(function==light_ch1_longOutValue){
         short lightValue = (short) value;
-        luciole_setLightValue(1, lightValue);
+        if(lightValue>0 && lightValue<20000){
+            luciole_setLightValue(1, lightValue);
+        }
+        
     }
     else if(function==light_ch2_longOutValue){
         short lightValue = (short) value;
