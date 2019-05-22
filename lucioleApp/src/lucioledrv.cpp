@@ -176,14 +176,14 @@ asynStatus Lucioledrv::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     if(function==light_ch1_longOutValue){
         short lightValue = (short) value;
-        if(lightValue>0 && lightValue<20000){
+        if(lightValue>=0 && lightValue<=20000){
             luciole_setLightValue(1, lightValue);
         }
         
     }
     else if(function==light_ch2_longOutValue){
         short lightValue = (short) value;
-	if(lightValue>0 && lightValue<20000){
+	if(lightValue>=0 && lightValue<=20000){
         	luciole_setLightValue(2, lightValue);
 	}
     }
