@@ -183,7 +183,9 @@ asynStatus Lucioledrv::writeInt32(asynUser *pasynUser, epicsInt32 value)
     }
     else if(function==light_ch2_longOutValue){
         short lightValue = (short) value;
-        luciole_setLightValue(2, lightValue);
+	if(lightValue>0 && lightValue<20000){
+        	luciole_setLightValue(2, lightValue);
+	}
     }
     else if(function==setTrigger_ch1_binaryInValue){
         luciole_setTrigger(1, 1);
